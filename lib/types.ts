@@ -1,3 +1,11 @@
+export interface PersonalInfo {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  summary: string;
+}
+
 export interface Education {
   school: string;
   degree: string;
@@ -16,14 +24,21 @@ export interface Experience {
   description: string;
 }
 
+export interface Skill {
+  name: string;
+}
+
+// This is the form-specific version of ResumeData
+export interface ResumeFormData {
+  personalInfo: PersonalInfo;
+  education: Education[];
+  experience: Experience[];
+  skills: Skill[];
+}
+
+// This is the API/display version of ResumeData
 export interface ResumeData {
-  personalInfo: {
-    fullName: string;
-    email: string;
-    phone: string;
-    location: string;
-    summary: string;
-  };
+  personalInfo: PersonalInfo;
   education: Education[];
   experience: Experience[];
   skills: string[];

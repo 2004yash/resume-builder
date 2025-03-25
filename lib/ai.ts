@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "AIzaSyAJvmOPZypyGjbePWLwOc23KiSPJoVjGrU");
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
 export async function generateResumeSummary(experience: string, skills: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });

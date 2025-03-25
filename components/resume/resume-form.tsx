@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResumeData } from "@/lib/types";
+import { ResumeData, ResumeFormData, Skill } from "@/lib/types";
 import { generateResumeSummary, generateSkillSuggestions } from "@/lib/ai";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,7 +50,11 @@ const resumeSchema = z.object({
       description: z.string().min(1, "Description is required"),
     })
   ),
-  skills: z.array(z.string()),
+  skills: z.array(
+    z.object({
+      name: z.string().min(1, "Skill name is required")
+    })
+  ),
 });
 
 interface ResumeFormProps {
@@ -69,9 +73,15 @@ export function ResumeForm({
   const [skillInput, setSkillInput] = useState("");
   const { toast } = useToast();
 
-  const form = useForm<ResumeData>({
+  // Convert the initialData.skills array from string[] to {name: string}[]
+  const transformedInitialData: ResumeFormData = {
+    ...initialData,
+    skills: initialData.skills.map(skill => ({ name: skill }))
+  };
+
+  const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeSchema),
-    defaultValues: initialData,
+    defaultValues: transformedInitialData,
   });
 
   const { fields: educationFields, append: appendEducation, remove: removeEducation } = 
@@ -98,7 +108,7 @@ export function ResumeForm({
       const experience = form.getValues("experience")
         .map(exp => `${exp.position} at ${exp.company}: ${exp.description}`)
         .join("\n");
-      const skills = form.getValues("skills").join(", ");
+      const skills = form.getValues("skills").map(skill => skill.name).join(", ");
       
       const summary = await generateResumeSummary(experience, skills);
       form.setValue("personalInfo.summary", summary);
@@ -120,7 +130,7 @@ export function ResumeForm({
 
   const handleAddSkill = () => {
     if (skillInput.trim()) {
-      appendSkill(skillInput.trim());
+      appendSkill({ name: skillInput.trim() });
       setSkillInput("");
     }
   };
@@ -131,10 +141,10 @@ export function ResumeForm({
       const experience = form.getValues("experience")
         .map(exp => `${exp.position} at ${exp.company}: ${exp.description}`)
         .join("\n");
-      const currentSkills = form.getValues("skills");
+      const currentSkills = form.getValues("skills").map(skill => skill.name);
       
       const suggestions = await generateSkillSuggestions(experience, currentSkills);
-      suggestions.forEach(skill => appendSkill(skill));
+      suggestions.forEach(skill => appendSkill({ name: skill }));
       
       toast({
         title: "Skills Generated",
@@ -151,9 +161,19 @@ export function ResumeForm({
     }
   };
 
+  // Transform the form data before submitting
+  const handleSubmit = (data: ResumeFormData) => {
+    // Convert skills back to string[] for compatibility with the rest of the app
+    const transformedData: ResumeData = {
+      ...data,
+      skills: data.skills.map(skill => skill.name)
+    };
+    onSubmit(transformedData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -589,7 +609,7 @@ export function ResumeForm({
                         className="flex items-center gap-2"
                         onClick={() => removeSkill(index)}
                       >
-                        {form.getValues(`skills.${index}`)}
+                        {form.getValues(`skills.${index}.name`)}
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </motion.div>

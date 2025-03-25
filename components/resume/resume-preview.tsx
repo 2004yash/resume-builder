@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ResumeData } from "@/lib/types";
+import { ResumeData, Skill } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 
@@ -10,6 +10,18 @@ interface ResumePreviewProps {
 }
 
 export function ResumePreview({ data }: ResumePreviewProps) {
+  // Ensure skills is an array of strings using a proper type guard
+  const skills = Array.isArray(data.skills) 
+    ? data.skills.map(skill => {
+        // Check if the skill is an object with a name property (Skill interface)
+        if (typeof skill === 'object' && skill !== null && 'name' in skill) {
+          return (skill as Skill).name;
+        }
+        // If it's already a string, just return it
+        return skill as string;
+      })
+    : [];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -80,11 +92,11 @@ export function ResumePreview({ data }: ResumePreviewProps) {
           </div>
         )}
 
-        {data.skills.length > 0 && (
+        {skills.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-2">Skills</h2>
             <div className="flex flex-wrap gap-2">
-              {data.skills.map((skill, index) => (
+              {skills.map((skill, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm"
